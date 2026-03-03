@@ -64,43 +64,45 @@ function getSortedToDo(todos, sortKey) {
     }
 }
 
-function processCommand(command) {
-    if (command.startsWith('date ')) {
-        const startDate = new Date(command.trim().slice(5))
-        const todosAfterDate = []
-        for (const line of getAllToDo()) {
-            const match = line.match(bigTodoParseRegex);
-            if (!match) {
-                continue;
-            }
-            if (new Date(match[2]) > startDate) {
-                todosAfterDate.push(match[0]);
-            }
+function getAfterDateToDo(command) {
+    const startDate = new Date(command.trim().slice(5))
+    const todosAfterDate = []
+    for (const line of getAllToDo()) {
+        const match = line.match(bigTodoParseRegex);
+        if (!match) {
+            continue;
         }
-        console.log(todosAfterDate);
-        return;
+        if (new Date(match[2]) > startDate) {
+            todosAfterDate.push(match[0]);
+        }
+    }
+    return todosAfterDate;
+}
+
+function processCommand(command) {
+    let resultString;
+
+    if (command.trim().startsWith('date ')) {
+        resultString = getAfterDateToDo(command);
     } else if (command.trim().startsWith('user')) {
-        const todos = getUserToDo(getAllToDo(), command.split(' ')[1].toLowerCase());
-        console.log(todos);
+        resultString = getUserToDo(getAllToDo(), command.split(' ')[1].toLowerCase());
     } else if (command.trim().startsWith('sort')) {
-        const todos = getSortedToDo(getAllToDo(), command.split(' ')[1]);
-        console.log(todos);
+        resultString = getSortedToDo(getAllToDo(), command.split(' ')[1]);
     } else switch (command) {
         case 'show':
-            const todos = getAllToDo();
-            console.log(todos); // здесь можно будет здесь норм красивый вывод
+            resultString = getAllToDo();
             break;
         case 'important':
-            const todosWithExclamation = getAllToDo().filter(line => line.includes('!'));
-            console.log(todosWithExclamation);
+            resultString = getAllToDo().filter(line => line.includes('!'));
             break;
         case 'exit':
             process.exit(0);
             break;
         default:
-            console.log('wrong command');
-            break;
+            resultString = 'wrong command';
     }
+
+    console.log(resultString);
 }
 
 // TODO you can do it!
