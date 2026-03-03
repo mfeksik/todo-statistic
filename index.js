@@ -26,6 +26,24 @@ function getAllToDo() {
 }
 
 function processCommand(command) {
+    const bigTodoParseRegex = /\/\/\sTODO\s([^;]+?);\s?([^;]+?);\s*(.+)/;
+
+    if (command.startsWith('date ')) {
+        const startDate = new Date(command.trim().slice(5))
+        const todosAfterDate = []
+        for (const line of getAllToDo()) {
+            const match = line.match(bigTodoParseRegex);
+            if (!match) {
+                continue;
+            }
+            if (new Date(match[2]) > startDate) {
+                todosAfterDate.push(match[0]);
+            }
+        }
+        console.log(todosAfterDate);
+        return;
+    }
+
     switch (command) {
         case 'show':
             const todos = getAllToDo();
