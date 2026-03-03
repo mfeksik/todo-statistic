@@ -30,6 +30,11 @@ function processCommand(command) {
         case 'show':
             const todos = getAllToDo();
             console.log(todos); // здесь можно будет здесь норм красивый вывод
+            break;
+        case 'important':
+            const todosWithExclamation = getAllToDo().filter(line => line.includes('!'));
+            console.log(todosWithExclamation);
+            break;
         case 'exit':
             process.exit(0);
             break;
