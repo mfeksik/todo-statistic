@@ -2,6 +2,7 @@ const {getAllFilePathsWithExtension, readFile} = require('./fileSystem');
 const {readLine} = require('./console');
 
 const files = getFiles();
+const bigTodoParseRegex = /\/\/\sTODO\s([^;]+?);\s?([^;]+?);\s*(.+)/;
 
 console.log('Please, write your command!');
 readLine(processCommand);
@@ -29,16 +30,47 @@ function getUserToDo(todos, name) {
     return todos
         .filter(todo => todo
             .toLowerCase()
-            .slice(8)
-            .startsWith(name)
+            .indexOf(name.toLowerCase()) !== -1
         );
+}
+
+function getSortedToDo(todos, sortKey) {
+    switch (sortKey) {
+        case 'importance':
+            let todosWithKeys = new Map();
+            for (const todo of todos) {
+                const exMarkCount = todo.split('!').length - 1;
+                if (!todosWithKeys.has(exMarkCount)) {
+                    todosWithKeys.set(exMarkCount, []);
+                }
+                todosWithKeys.get(exMarkCount).push(todo);
+            }
+            return [...todosWithKeys]
+                .sort((a, b) => b[0] - a[0])
+                .map(([, value]) => value)
+        case 'user':
+            const map = new Map();
+            for (const todo of todos) {
+                const match = todo.match(bigTodoParseRegex);
+                const name = match ? match[1] : '';
+                if (!map.has(name)) {
+                    map.set(name, []);
+                }
+                map.get(name).push(todo);
+            }
+            return map;
+        default:
+            return [];
+    }
 }
 
 function processCommand(command) {
     if (command.trim().startsWith('user')) {
-        let [_, user] = command.split(' ');
-        const totos = getUserToDo(getAllToDo(), user.toLowerCase());
-        console.log(totos);
+        const todos = getUserToDo(getAllToDo(), command.split(' ')[1].toLowerCase());
+        console.log(todos);
+    } else if (command.trim().startsWith('sort')) {
+        const todos = getSortedToDo(getAllToDo(), command.split(' ')[1]);
+        console.log(todos);
     } else switch (command) {
         case 'show':
             const todos = getAllToDo();
