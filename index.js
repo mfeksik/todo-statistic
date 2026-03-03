@@ -25,8 +25,21 @@ function getAllToDo() {
     return result;
 }
 
+function getUserToDo(todos, name) {
+    return todos
+        .filter(todo => todo
+            .toLowerCase()
+            .slice(8)
+            .startsWith(name)
+        );
+}
+
 function processCommand(command) {
-    switch (command) {
+    if (command.trim().startsWith('user')) {
+        let [_, user] = command.split(' ');
+        const totos = getUserToDo(getAllToDo(), user.toLowerCase());
+        console.log(totos);
+    } else switch (command) {
         case 'show':
             const todos = getAllToDo();
             console.log(todos); // здесь можно будет здесь норм красивый вывод
