@@ -12,14 +12,19 @@ function getFiles() {
     return filePaths.map(path => readFile(path));
 }
 
+function getExMarkCount(string) {
+    return string.split('!').length - 1;
+}
+
 function getAllToDo() {
+    const match = `${'//'} ${'TODO'} `
     const result = [];
     for (const file of files) {
         const lines = file
             .split('\n')
-            .filter(line => line.includes('// TODO '))
+            .filter(line => line.includes(match))
             .map(line => line
-                .slice(line.indexOf('// TODO '))
+                .slice(line.indexOf(match))
                 .trim());
         result.push(...lines);
     }
@@ -39,7 +44,7 @@ function getSortedToDo(todos, sortKey) {
         case 'importance':
             let todosWithKeys = new Map();
             for (const todo of todos) {
-                const exMarkCount = todo.split('!').length - 1;
+                const exMarkCount = getExMarkCount(todo);
                 if (!todosWithKeys.has(exMarkCount)) {
                     todosWithKeys.set(exMarkCount, []);
                 }
@@ -47,7 +52,7 @@ function getSortedToDo(todos, sortKey) {
             }
             return [...todosWithKeys]
                 .sort((a, b) => b[0] - a[0])
-                .map(([, value]) => value)
+                .flatMap(([, value]) => value);
         case 'user':
             const map = new Map();
             for (const todo of todos) {
@@ -58,7 +63,9 @@ function getSortedToDo(todos, sortKey) {
                 }
                 map.get(name).push(todo);
             }
-            return map;
+            return [...map.entries()]
+                .sort((a, b) => -a[0].localeCompare(b[0]))
+                .flatMap(([, value]) => value);
         default:
             return [];
     }
@@ -99,10 +106,35 @@ function processCommand(command) {
             process.exit(0);
             break;
         default:
-            resultString = 'wrong command';
+            console.log('wrong command');
+            return;
     }
 
-    console.log(resultString);
+    for (const todo of resultString) {
+        const hasExMark = getExMarkCount(todo) > 0;
+        const parts = todo.match(bigTodoParseRegex);
+        let [userName, date, text] = parts ? parts.slice(1) : ['', '', ''];
+        if (!parts) {
+            text = todo.slice(8);
+        }
+
+        let resultArray = [];
+        resultArray.push(hasExMark ? '!' : ' ');
+        resultArray.push('  |  ');
+        if (userName.length > 10) {
+            userName = `${userName.substring(0, 7)}...`;
+        }
+        if (text.length > 50) {
+            text = `${text.substring(0, 47)}...`;
+        }
+        resultArray.push(userName.padEnd(10));
+        resultArray.push('  |  ');
+        resultArray.push(date.padEnd(10));
+        resultArray.push('  |  ');
+        resultArray.push(text.padEnd(50));
+
+        console.log(resultArray.join(''));
+    }
 }
 
 // TODO you can do it!
