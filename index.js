@@ -66,6 +66,20 @@ function getSortedToDo(todos, sortKey) {
             return [...map.entries()]
                 .sort((a, b) => -a[0].localeCompare(b[0]))
                 .flatMap(([, value]) => value);
+        case 'date':
+            const pupupu = new Map();
+            for (const todo of todos) {
+                const match = todo.match(bigTodoParseRegex);
+                const date = match ? match[2] : '';
+                if (!pupupu.has(date)) {
+                    pupupu.set(date, []);
+                }
+                pupupu.get(date).push(todo);
+            }
+            return [...pupupu.entries()]
+                .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                .flatMap(([, value]) => value);
+
         default:
             return [];
     }
